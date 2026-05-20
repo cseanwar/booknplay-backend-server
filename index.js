@@ -27,6 +27,13 @@ async function run() {
     const db = client.db("booknplay")
     const booknplayCollection = db.collection("facilities")
 
+    // All facilities page API
+    app.get('/facilities', async (req, res) => {
+        const result = await booknplayCollection.find().toArray();
+      res.json(result);
+    })
+
+    // Add facility API
     app.post('/facilities', async (req, res) => {
         const facilityData = req.body;
         console.log(facilityData)
@@ -34,6 +41,15 @@ async function run() {
         
         res.json(result);
     })
+
+    // Facility Details page API
+    app.get("/facilities/:id", async (req, res) => {
+      const { id } = req.params;
+      const result = await destinationCollection.findOne({
+        _id: new ObjectId(id),
+      });
+      res.json(result);
+    });
 
 
     await client.db("admin").command({ ping: 1 });
