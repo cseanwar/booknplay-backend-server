@@ -50,6 +50,12 @@ async function run() {
     const booknplayCollection = db.collection("facilities")
     const bookingCollection = db.collection("bookings");
 
+    // API for featured cards
+     app.get("/featured", async (req, res) => {
+      const result = await booknplayCollection.find().limit(6).toArray()
+      res.json(result)
+    })
+
     // All facilities page API
     app.get('/facilities', async (req, res) => {
         const result = await booknplayCollection.find().toArray();
