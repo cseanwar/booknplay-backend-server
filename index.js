@@ -58,18 +58,35 @@ async function run() {
 
     // All facilities page API
     app.get('/facilities', async (req, res) => {
-        const result = await booknplayCollection.find().toArray();
-      res.json(result);
-    })
+        const email = req.query.email;
+        let query = {};
+        if (email) {
+            query.ownerEmail = email;
+        }
+        const result = await booknplayCollection.find(query).toArray();
+        res.json(result);
+    });
 
     // Add facility API
     app.post('/facilities', async (req, res) => {
         const facilityData = req.body;
-        console.log(facilityData)
         const result = await booknplayCollection.insertOne(facilityData);
+        res.send(result);
+    });
+
+    // app.post('/facilities', async (req, res) => {
+    //     const facilityData = req.body;
+    //     // console.log(facilityData)
+    //     const email = req.query.email;
+    //     let query = {};
+    //     if (email) {
+    //         query.ownerEmail = email;
+    //     }
+
+    //     const result = await booknplayCollection.insertOne(facilityData);
         
-        res.json(result);
-    })
+    //     res.json(result);
+    // })
 
     // Facility Details page API
     app.get("/facilities/:id", async (req, res) => {
