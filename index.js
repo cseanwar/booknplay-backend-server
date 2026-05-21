@@ -26,6 +26,7 @@ async function run() {
 
     const db = client.db("booknplay")
     const booknplayCollection = db.collection("facilities")
+    const bookingCollection = db.collection("bookings");
 
     // All facilities page API
     app.get('/facilities', async (req, res) => {
@@ -71,6 +72,15 @@ async function run() {
       const result = await booknplayCollection.deleteOne({
         _id: new ObjectId(id),
       });
+      res.json(result);
+    });
+
+
+    // API for Booking one facility
+    app.post("/booking", async (req, res) => {
+      const bookingData = req.body;
+      const result = await bookingCollection.insertOne(bookingData);
+
       res.json(result);
     });
 
