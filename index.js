@@ -10,8 +10,8 @@ const uri = process.env.MONGODB_URI;
 const app = express()
 const PORT = process.env.PORT;
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -21,50 +21,76 @@ const client = new MongoClient(uri, {
   }
 });
 
-const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jkws`))
+const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks`));
 
 const verifyToken = async (req, res, next) => {
   const authHeader = req?.headers.authorization;
   if (!authHeader) {
     return res.status(401).json({ message: "Unauthorized" });
   }
+  
   const token = authHeader.split(" ")[1];
+  console.log(token);
+
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   try {
     const { payload } = await jwtVerify(token, JWKS);
-    console.log(payload);
+    req.user = payload;
     next();
-  } catch (error) {
+  } 
+  
+  catch (error) {
     return res.status(403).json({ message: "Forbidden" });
   }
 };
 
 async function run() {
   try {
-    // await client.connect();
 
     const db = client.db("booknplay")
     const booknplayCollection = db.collection("facilities")
     const bookingCollection = db.collection("bookings");
 
     // API for featured cards
-     app.get("/featured", async (req, res) => {
+    app.get("/featured", async (req, res) => {
       const result = await booknplayCollection.find().limit(6).toArray()
       res.json(result)
     })
 
     // All facilities page API
     app.get('/facilities', async (req, res) => {
-        const email = req.query.email;
-        let query = {};
-        if (email) {
-            query.ownerEmail = email;
+        try {
+            const { email, search, type } = req.query;
+            const query = {};
+        
+            if (email) {
+                query.ownerEmail = email;
+            }
+            
+            // Search by Facility name
+            if (search) {
+                query.facilityName = {
+                    $regex: search,
+                    $options: "i",
+                };
+            }
+            
+            // Filter by sport type
+            if (type) {
+                const types = Array.isArray(type) ? type : [type];
+                query.facility_type = { $in: types };
+            }
+            
+            const result = await booknplayCollection.find(query).toArray();
+            res.json(result);
+        
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: err.message });
         }
-        const result = await booknplayCollection.find(query).toArray();
-        res.json(result);
     });
 
     // Add facility API
@@ -73,20 +99,6 @@ async function run() {
         const result = await booknplayCollection.insertOne(facilityData);
         res.send(result);
     });
-
-    // app.post('/facilities', async (req, res) => {
-    //     const facilityData = req.body;
-    //     // console.log(facilityData)
-    //     const email = req.query.email;
-    //     let query = {};
-    //     if (email) {
-    //         query.ownerEmail = email;
-    //     }
-
-    //     const result = await booknplayCollection.insertOne(facilityData);
-        
-    //     res.json(result);
-    // })
 
     // Facility Details page API
     app.get("/facilities/:id", async (req, res) => {
