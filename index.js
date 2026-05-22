@@ -2,7 +2,7 @@ const express = require('express')
 const dotenv = require('dotenv')
 const cors = require("cors")
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const { createRemoteJWKSet } = require('jose-cjs');
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 dotenv.config()
 
 const uri = process.env.MONGODB_URI;
@@ -101,7 +101,7 @@ async function run() {
     });
 
     // Facility Details page API
-    app.get("/facilities/:id", async (req, res) => {
+    app.get("/facilities/:id", verifyToken, async (req, res) => {
       const { id } = req.params;
       const result = await booknplayCollection.findOne({
         _id: new ObjectId(id),
