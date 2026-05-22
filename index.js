@@ -101,7 +101,7 @@ async function run() {
     });
 
     // Facility Details page API
-    app.get("/facilities/:id", verifyToken, async (req, res) => {
+    app.get("/facilities/:id", async (req, res) => {
       const { id } = req.params;
       const result = await booknplayCollection.findOne({
         _id: new ObjectId(id),
